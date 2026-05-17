@@ -16,6 +16,14 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set VCPKG_ROOT
+        shell: pwsh
+        run: |
+          echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+
       - name: Build RustDesk
         run: cargo build --release
 
