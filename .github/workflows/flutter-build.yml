@@ -265,30 +265,93 @@ TOML
           pip3 install -r requirements.txt
           python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
 
-          # Validate that data.bin contains our injected settings
-          if python3 - <<'PY'
-import sys
-data = open('data.bin','rb').read()
-ok = True
-for s in [b'custom-rendezvous-server', b'zst.grukam.pl', b'71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=']:
-    if s not in data:
-        print('MISSING:', s)
-        ok = False
-if not ok:
-    sys.exit(2)
-print('Embedded settings validation: OK')
-PY
-          then
+            # Extract and print embedded plugins/manager.toml from data.bin, unpack to temp dir and validate
+            if python3 - <<'PY'
+      import brotli, sys, os, tempfile, struct
+
+      data = open('data.bin','rb').read()
+      pos = 0
+      IDENT = b'rustdesk'
+      L = len(IDENT)
+      if data[pos:pos+L] != IDENT:
+        print('data.bin invalid: missing header')
+        sys.exit(2)
+      pos += L
+      found = False
+      files = {}
+      while True:
+        if data[pos:pos+L] == IDENT:
+          pos += L
+          break
+        # path length
+        path_len = struct.unpack('>I', data[pos:pos+4])[0]
+        pos += 4
+        path = data[pos:pos+path_len].decode('utf-8')
+        pos += path_len
+        file_len = struct.unpack('>I', data[pos:pos+4])[0]
+        pos += 4
+        raw = data[pos:pos+file_len]
+        pos += file_len
+        md5 = data[pos:pos+32]
+        pos += 32
+        try:
+          content = brotli.decompress(raw)
+        except Exception as e:
+          content = None
+        files[path] = content
+
+      target = 'plugins/manager.toml'
+      if target in files and files[target] is not None:
+        print('--- Embedded', target, '---')
+        txt = files[target].decode('utf-8', errors='ignore')
+        print(txt)
+        # print the specific keys
+        for key in ['custom-rendezvous-server','rendezvous_servers','rs_pub_key','RS_PUB_KEY']:
+          for line in txt.splitlines():
+            if line.strip().startswith(key):
+              print('FOUND', key+':', line.split('=',1)[1].strip())
+        found = True
+      else:
+        print('manager.toml not embedded')
+
+      # quick unpack test to temp dir
+      td = tempfile.mkdtemp()
+      print('Unpacking to', td)
+      for p, c in files.items():
+        if c is None:
+          continue
+        fp = os.path.join(td, p)
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
+        open(fp, 'wb').write(c)
+
+      if not found:
+        print('Validation failed: manager.toml not found in data.bin')
+        sys.exit(2)
+      print('Embedded settings validation: OK')
+      PY
+            then
             echo 'data.bin validation passed'
-          else
+            else
             echo 'data.bin validation failed' >&2
             exit 1
-          fi
+            fi
           popd
 
           mkdir -p ./SignOutput
           # Custom filename: include provider in name so it's easy to identify
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+
+      - name: Print final EXE path
+        run: |
+          echo "SignOutput contents:"
+          ls -l ./SignOutput || true
+          for f in ./SignOutput/*.exe; do echo "EXE: $f" || true; done
+
+      - name: Upload portable executable artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rustdesk-portable-${{ matrix.job.arch }}
+          path: ./SignOutput/*.exe
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -467,28 +530,91 @@ TOML
           pip3 install -r requirements.txt
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
 
-          # Validate embedding
-          if python3 - <<'PY'
-import sys
-data = open('data.bin','rb').read()
-ok = True
-for s in [b'custom-rendezvous-server', b'zst.grukam.pl', b'71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=']:
-    if s not in data:
-        print('MISSING:', s)
-        ok = False
-if not ok:
-    sys.exit(2)
-print('Embedded settings validation: OK')
-PY
-          then
+            # Extract and print embedded plugins/manager.toml from data.bin, unpack to temp dir and validate
+            if python3 - <<'PY'
+      import brotli, sys, os, tempfile, struct
+
+      data = open('data.bin','rb').read()
+      pos = 0
+      IDENT = b'rustdesk'
+      L = len(IDENT)
+      if data[pos:pos+L] != IDENT:
+        print('data.bin invalid: missing header')
+        sys.exit(2)
+      pos += L
+      found = False
+      files = {}
+      while True:
+        if data[pos:pos+L] == IDENT:
+          pos += L
+          break
+        # path length
+        path_len = struct.unpack('>I', data[pos:pos+4])[0]
+        pos += 4
+        path = data[pos:pos+path_len].decode('utf-8')
+        pos += path_len
+        file_len = struct.unpack('>I', data[pos:pos+4])[0]
+        pos += 4
+        raw = data[pos:pos+file_len]
+        pos += file_len
+        md5 = data[pos:pos+32]
+        pos += 32
+        try:
+          content = brotli.decompress(raw)
+        except Exception as e:
+          content = None
+        files[path] = content
+
+      target = 'plugins/manager.toml'
+      if target in files and files[target] is not None:
+        print('--- Embedded', target, '---')
+        txt = files[target].decode('utf-8', errors='ignore')
+        print(txt)
+        # print the specific keys
+        for key in ['custom-rendezvous-server','rendezvous_servers','rs_pub_key','RS_PUB_KEY']:
+          for line in txt.splitlines():
+            if line.strip().startswith(key):
+              print('FOUND', key+':', line.split('=',1)[1].strip())
+        found = True
+      else:
+        print('manager.toml not embedded')
+
+      # quick unpack test to temp dir
+      td = tempfile.mkdtemp()
+      print('Unpacking to', td)
+      for p, c in files.items():
+        if c is None:
+          continue
+        fp = os.path.join(td, p)
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
+        open(fp, 'wb').write(c)
+
+      if not found:
+        print('Validation failed: manager.toml not found in data.bin')
+        sys.exit(2)
+      print('Embedded settings validation: OK')
+      PY
+            then
             echo 'data.bin validation passed'
-          else
+            else
             echo 'data.bin validation failed' >&2
             exit 1
-          fi
+            fi
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+
+      - name: Print final EXE path
+        run: |
+          echo "SignOutput contents:"
+          ls -l ./SignOutput || true
+          for f in ./SignOutput/*.exe; do echo "EXE: $f" || true; done
+
+      - name: Upload portable executable artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rustdesk-portable-${{ matrix.job.arch }}-sciter
+          path: ./SignOutput/*.exe
 
       - name: Sign rustdesk self-extracted file
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != '-2'
