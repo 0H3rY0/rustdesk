@@ -34,7 +34,7 @@ env:
   # vcpkg version: 2025.08.27
   # If we change the `VCPKG COMMIT_ID`, please remember:
   # 1. Call `$VCPKG_ROOT/vcpkg x-update-baseline` to update the baseline in `vcpkg.json`.
-  #  Or we may face build issue like 
+  #  Or we may face build issue like
   #  https://github.com/rustdesk/rustdesk/actions/runs/14414119794/job/40427970174
   # 2. Update the `VCPKG_COMMIT_ID` in `ci.yml` and `playground.yml`.
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
@@ -250,13 +250,13 @@ jobs:
           echo "Creating plugins/manager.toml with preconfigured rendezvous settings..."
           mkdir -p ./rustdesk/plugins
           cat > ./rustdesk/plugins/manager.toml <<'TOML'
-version = "0.1.0"
-[options]
-custom-rendezvous-server = "zst.grukam.pl"
-rendezvous_servers = "zst.grukam.pl"
-rs_pub_key = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
-RS_PUB_KEY = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
-TOML
+          version = "0.1.0"
+          [options]
+          custom-rendezvous-server = "zst.grukam.pl"
+          rendezvous_servers = "zst.grukam.pl"
+          rs_pub_key = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
+          RS_PUB_KEY = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
+          TOML
           echo "--- manager.toml ---"
           sed -n '1,200p' ./rustdesk/plugins/manager.toml || true
 
@@ -508,13 +508,13 @@ TOML
           echo "Creating Release/plugins/manager.toml with preconfigured rendezvous settings..."
           mkdir -p ./Release/plugins
           cat > ./Release/plugins/manager.toml <<'TOML'
-version = "0.1.0"
-[options]
-custom-rendezvous-server = "zst.grukam.pl"
-rendezvous_servers = "zst.grukam.pl"
-rs_pub_key = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
-RS_PUB_KEY = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
-TOML
+          version = "0.1.0"
+          [options]
+          custom-rendezvous-server = "zst.grukam.pl"
+          rendezvous_servers = "zst.grukam.pl"
+          rs_pub_key = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
+          RS_PUB_KEY = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
+          TOML
           echo "--- Release plugins/manager.toml ---"
           sed -n '1,200p' ./Release/plugins/manager.toml || true
 
@@ -703,7 +703,7 @@ TOML
         run: |
           rustup target add ${{ matrix.job.target }}
           cargo build --features flutter,hwcodec --release --target aarch64-apple-ios --lib
-          
+
       - name: Upload liblibrustdesk.a Artifacts
         uses: actions/upload-artifact@master
         with:
@@ -733,7 +733,6 @@ TOML
       #     tag_name: ${{ env.TAG_NAME }}
       #     files: |
       #       flutter/build/ios/ipa/*.ipa
-
 
   build-for-macOS:
     name: ${{ matrix.job.target }}
