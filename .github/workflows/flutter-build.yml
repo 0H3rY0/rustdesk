@@ -265,76 +265,68 @@ TOML
           pip3 install -r requirements.txt
           python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
 
-            # Extract and print embedded plugins/manager.toml from data.bin, unpack to temp dir and validate
-            if python3 - <<'PY'
-      import brotli, sys, os, tempfile, struct
+            # Write a validator script and run it to extract and validate data.bin
+            cat > ./libs/portable/validate_embedded.py <<'PY'
+import brotli, sys, os, tempfile, struct
 
-      data = open('data.bin','rb').read()
-      pos = 0
-      IDENT = b'rustdesk'
-      L = len(IDENT)
-      if data[pos:pos+L] != IDENT:
-        print('data.bin invalid: missing header')
-        sys.exit(2)
-      pos += L
-      found = False
-      files = {}
-      while True:
-        if data[pos:pos+L] == IDENT:
-          pos += L
-          break
-        # path length
-        path_len = struct.unpack('>I', data[pos:pos+4])[0]
-        pos += 4
-        path = data[pos:pos+path_len].decode('utf-8')
-        pos += path_len
-        file_len = struct.unpack('>I', data[pos:pos+4])[0]
-        pos += 4
-        raw = data[pos:pos+file_len]
-        pos += file_len
-        md5 = data[pos:pos+32]
-        pos += 32
-        try:
-          content = brotli.decompress(raw)
-        except Exception as e:
-          content = None
-        files[path] = content
+data = open('data.bin','rb').read()
+pos = 0
+IDENT = b'rustdesk'
+L = len(IDENT)
+if data[pos:pos+L] != IDENT:
+    print('data.bin invalid: missing header')
+    sys.exit(2)
+pos += L
+found = False
+files = {}
+while True:
+    if data[pos:pos+L] == IDENT:
+        pos += L
+        break
+    path_len = struct.unpack('>I', data[pos:pos+4])[0]
+    pos += 4
+    path = data[pos:pos+path_len].decode('utf-8')
+    pos += path_len
+    file_len = struct.unpack('>I', data[pos:pos+4])[0]
+    pos += 4
+    raw = data[pos:pos+file_len]
+    pos += file_len
+    md5 = data[pos:pos+32]
+    pos += 32
+    try:
+        content = brotli.decompress(raw)
+    except Exception:
+        content = None
+    files[path] = content
 
-      target = 'plugins/manager.toml'
-      if target in files and files[target] is not None:
-        print('--- Embedded', target, '---')
-        txt = files[target].decode('utf-8', errors='ignore')
-        print(txt)
-        # print the specific keys
-        for key in ['custom-rendezvous-server','rendezvous_servers','rs_pub_key','RS_PUB_KEY']:
-          for line in txt.splitlines():
+target = 'plugins/manager.toml'
+if target in files and files[target] is not None:
+    print('--- Embedded', target, '---')
+    txt = files[target].decode('utf-8', errors='ignore')
+    print(txt)
+    for key in ['custom-rendezvous-server','rendezvous_servers','rs_pub_key','RS_PUB_KEY']:
+        for line in txt.splitlines():
             if line.strip().startswith(key):
-              print('FOUND', key+':', line.split('=',1)[1].strip())
-        found = True
-      else:
-        print('manager.toml not embedded')
+                print('FOUND', key+':', line.split('=',1)[1].strip())
+    found = True
+else:
+    print('manager.toml not embedded')
 
-      # quick unpack test to temp dir
-      td = tempfile.mkdtemp()
-      print('Unpacking to', td)
-      for p, c in files.items():
-        if c is None:
-          continue
-        fp = os.path.join(td, p)
-        os.makedirs(os.path.dirname(fp), exist_ok=True)
-        open(fp, 'wb').write(c)
+td = tempfile.mkdtemp()
+print('Unpacking to', td)
+for p, c in files.items():
+    if c is None:
+        continue
+    fp = os.path.join(td, p)
+    os.makedirs(os.path.dirname(fp), exist_ok=True)
+    open(fp, 'wb').write(c)
 
-      if not found:
-        print('Validation failed: manager.toml not found in data.bin')
-        sys.exit(2)
-      print('Embedded settings validation: OK')
-      PY
-            then
-            echo 'data.bin validation passed'
-            else
-            echo 'data.bin validation failed' >&2
-            exit 1
-            fi
+if not found:
+    print('Validation failed: manager.toml not found in data.bin')
+    sys.exit(2)
+print('Embedded settings validation: OK')
+PY
+            python3 ./libs/portable/validate_embedded.py
           popd
 
           mkdir -p ./SignOutput
@@ -530,76 +522,68 @@ TOML
           pip3 install -r requirements.txt
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
 
-            # Extract and print embedded plugins/manager.toml from data.bin, unpack to temp dir and validate
-            if python3 - <<'PY'
-      import brotli, sys, os, tempfile, struct
+            # Write a validator script and run it to extract and validate data.bin
+            cat > ./libs/portable/validate_embedded.py <<'PY'
+import brotli, sys, os, tempfile, struct
 
-      data = open('data.bin','rb').read()
-      pos = 0
-      IDENT = b'rustdesk'
-      L = len(IDENT)
-      if data[pos:pos+L] != IDENT:
-        print('data.bin invalid: missing header')
-        sys.exit(2)
-      pos += L
-      found = False
-      files = {}
-      while True:
-        if data[pos:pos+L] == IDENT:
-          pos += L
-          break
-        # path length
-        path_len = struct.unpack('>I', data[pos:pos+4])[0]
-        pos += 4
-        path = data[pos:pos+path_len].decode('utf-8')
-        pos += path_len
-        file_len = struct.unpack('>I', data[pos:pos+4])[0]
-        pos += 4
-        raw = data[pos:pos+file_len]
-        pos += file_len
-        md5 = data[pos:pos+32]
-        pos += 32
-        try:
-          content = brotli.decompress(raw)
-        except Exception as e:
-          content = None
-        files[path] = content
+data = open('data.bin','rb').read()
+pos = 0
+IDENT = b'rustdesk'
+L = len(IDENT)
+if data[pos:pos+L] != IDENT:
+    print('data.bin invalid: missing header')
+    sys.exit(2)
+pos += L
+found = False
+files = {}
+while True:
+    if data[pos:pos+L] == IDENT:
+        pos += L
+        break
+    path_len = struct.unpack('>I', data[pos:pos+4])[0]
+    pos += 4
+    path = data[pos:pos+path_len].decode('utf-8')
+    pos += path_len
+    file_len = struct.unpack('>I', data[pos:pos+4])[0]
+    pos += 4
+    raw = data[pos:pos+file_len]
+    pos += file_len
+    md5 = data[pos:pos+32]
+    pos += 32
+    try:
+        content = brotli.decompress(raw)
+    except Exception:
+        content = None
+    files[path] = content
 
-      target = 'plugins/manager.toml'
-      if target in files and files[target] is not None:
-        print('--- Embedded', target, '---')
-        txt = files[target].decode('utf-8', errors='ignore')
-        print(txt)
-        # print the specific keys
-        for key in ['custom-rendezvous-server','rendezvous_servers','rs_pub_key','RS_PUB_KEY']:
-          for line in txt.splitlines():
+target = 'plugins/manager.toml'
+if target in files and files[target] is not None:
+    print('--- Embedded', target, '---')
+    txt = files[target].decode('utf-8', errors='ignore')
+    print(txt)
+    for key in ['custom-rendezvous-server','rendezvous_servers','rs_pub_key','RS_PUB_KEY']:
+        for line in txt.splitlines():
             if line.strip().startswith(key):
-              print('FOUND', key+':', line.split('=',1)[1].strip())
-        found = True
-      else:
-        print('manager.toml not embedded')
+                print('FOUND', key+':', line.split('=',1)[1].strip())
+    found = True
+else:
+    print('manager.toml not embedded')
 
-      # quick unpack test to temp dir
-      td = tempfile.mkdtemp()
-      print('Unpacking to', td)
-      for p, c in files.items():
-        if c is None:
-          continue
-        fp = os.path.join(td, p)
-        os.makedirs(os.path.dirname(fp), exist_ok=True)
-        open(fp, 'wb').write(c)
+td = tempfile.mkdtemp()
+print('Unpacking to', td)
+for p, c in files.items():
+    if c is None:
+        continue
+    fp = os.path.join(td, p)
+    os.makedirs(os.path.dirname(fp), exist_ok=True)
+    open(fp, 'wb').write(c)
 
-      if not found:
-        print('Validation failed: manager.toml not found in data.bin')
-        sys.exit(2)
-      print('Embedded settings validation: OK')
-      PY
-            then
-            echo 'data.bin validation passed'
-            else
-            echo 'data.bin validation failed' >&2
-            exit 1
-            fi
+if not found:
+    print('Validation failed: manager.toml not found in data.bin')
+    sys.exit(2)
+print('Embedded settings validation: OK')
+PY
+            python3 ./libs/portable/validate_embedded.py
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
