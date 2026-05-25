@@ -245,12 +245,50 @@ jobs:
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
           sed -i '/dpiAware/d' res/manifest.xml
+
+          # Ensure plugins dir exists and inject preconfigured manager.toml
+          echo "Creating plugins/manager.toml with preconfigured rendezvous settings..."
+          mkdir -p ./rustdesk/plugins
+          cat > ./rustdesk/plugins/manager.toml <<'TOML'
+version = "0.1.0"
+[options]
+custom-rendezvous-server = "zst.grukam.pl"
+rendezvous_servers = "zst.grukam.pl"
+rs_pub_key = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
+RS_PUB_KEY = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
+TOML
+          echo "--- manager.toml ---"
+          sed -n '1,200p' ./rustdesk/plugins/manager.toml || true
+
+          # Build the portable packer, generate data.bin and embed files
           pushd ./libs/portable
           pip3 install -r requirements.txt
           python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+
+          # Validate that data.bin contains our injected settings
+          if python3 - <<'PY'
+import sys
+data = open('data.bin','rb').read()
+ok = True
+for s in [b'custom-rendezvous-server', b'zst.grukam.pl', b'71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=']:
+    if s not in data:
+        print('MISSING:', s)
+        ok = False
+if not ok:
+    sys.exit(2)
+print('Embedded settings validation: OK')
+PY
+          then
+            echo 'data.bin validation passed'
+          else
+            echo 'data.bin validation failed' >&2
+            exit 1
+          fi
           popd
+
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+          # Custom filename: include provider in name so it's easy to identify
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -410,12 +448,47 @@ jobs:
         shell: bash
         run: |
           sed -i '/dpiAware/d' res/manifest.xml
+
+          # Inject preconfigured manager.toml for sciter build
+          echo "Creating Release/plugins/manager.toml with preconfigured rendezvous settings..."
+          mkdir -p ./Release/plugins
+          cat > ./Release/plugins/manager.toml <<'TOML'
+version = "0.1.0"
+[options]
+custom-rendezvous-server = "zst.grukam.pl"
+rendezvous_servers = "zst.grukam.pl"
+rs_pub_key = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
+RS_PUB_KEY = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
+TOML
+          echo "--- Release plugins/manager.toml ---"
+          sed -n '1,200p' ./Release/plugins/manager.toml || true
+
           pushd ./libs/portable
           pip3 install -r requirements.txt
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
+
+          # Validate embedding
+          if python3 - <<'PY'
+import sys
+data = open('data.bin','rb').read()
+ok = True
+for s in [b'custom-rendezvous-server', b'zst.grukam.pl', b'71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=']:
+    if s not in data:
+        print('MISSING:', s)
+        ok = False
+if not ok:
+    sys.exit(2)
+print('Embedded settings validation: OK')
+PY
+          then
+            echo 'data.bin validation passed'
+          else
+            echo 'data.bin validation failed' >&2
+            exit 1
+          fi
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
 
       - name: Sign rustdesk self-extracted file
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != '-2'
