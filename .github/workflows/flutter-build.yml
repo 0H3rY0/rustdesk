@@ -331,23 +331,31 @@ jobs:
 
           # Debug: show cwd and relevant directories to locate the generated EXE
           echo "PWD: $(pwd)"
-          echo "Listing ./target (root)"
-          ls -la ./target || true
-          echo "Listing ./libs/portable/target"
-          ls -la ./libs/portable/target || true
-          echo "Listing ./SignOutput (before)"
-          ls -la ./SignOutput || true
+          echo "Listing workspace root (first 200 lines)"
+          ls -R . | sed -n '1,200p' || true
+          echo "Listing ./target recursively"
+          ls -R ./target || true
+          echo "Listing ./libs/portable (after generate)"
+          ls -la ./libs/portable || true
+          echo "Listing ./libs/portable/target recursively"
+          ls -R ./libs/portable/target || true
+          echo "Listing ./SignOutput (before) recursively"
+          ls -R ./SignOutput || true
 
           # Ensure SignOutput exists
           mkdir -p ./SignOutput
 
           # Find the generated portable packer EXE (wherever it was created) and move it into SignOutput
-          EXE_PATH=$(find . -type f -name 'rustdesk-portable-packer*.exe' -print -quit || true)
+          echo "Searching for generated EXE files (rustdesk-portable*.exe)"
+          find . -type f -name 'rustdesk-portable*.exe' -print || true
+          EXE_PATH=$(find . -type f -name 'rustdesk-portable*.exe' -print -quit || true)
           echo "Found EXE_PATH: $EXE_PATH"
           if [ -n "$EXE_PATH" ]; then
-            mv "$EXE_PATH" ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+            BASENAME=$(basename "$EXE_PATH")
+            mv "$EXE_PATH" "./SignOutput/$BASENAME"
+            echo "Moved to ./SignOutput/$BASENAME"
           else
-            echo "ERROR: rustdesk-portable-packer.exe not found"
+            echo "ERROR: rustdesk portable EXE not found"
             echo "Full tree under current dir (first 200 lines):"
             ls -R . | sed -n '1,200p' || true
           fi
@@ -364,6 +372,18 @@ jobs:
         with:
           name: rustdesk-portable-${{ matrix.job.arch }}
           path: ./SignOutput/*.exe
+
+      - name: Log uploaded EXE files
+        shell: bash
+        run: |
+          echo "Uploaded EXE files (SignOutput):"
+          ls -l ./SignOutput/*.exe || true
+
+      - name: Log uploaded EXE files
+        shell: bash
+        run: |
+          echo "Uploaded EXE files (SignOutput):"
+          ls -l ./SignOutput/*.exe || true
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -607,23 +627,31 @@ jobs:
 
           # Debug: show cwd and relevant directories to locate the generated EXE
           echo "PWD: $(pwd)"
-          echo "Listing ./target (root)"
-          ls -la ./target || true
-          echo "Listing ./libs/portable/target"
-          ls -la ./libs/portable/target || true
-          echo "Listing ./SignOutput (before)"
-          ls -la ./SignOutput || true
+          echo "Listing workspace root (first 200 lines)"
+          ls -R . | sed -n '1,200p' || true
+          echo "Listing ./target recursively"
+          ls -R ./target || true
+          echo "Listing ./libs/portable (after generate)"
+          ls -la ./libs/portable || true
+          echo "Listing ./libs/portable/target recursively"
+          ls -R ./libs/portable/target || true
+          echo "Listing ./SignOutput (before) recursively"
+          ls -R ./SignOutput || true
 
           # Ensure SignOutput exists
           mkdir -p ./SignOutput
 
           # Find the generated portable packer EXE (wherever it was created) and move it into SignOutput
-          EXE_PATH=$(find . -type f -name 'rustdesk-portable-packer*.exe' -print -quit || true)
+          echo "Searching for generated EXE files (rustdesk-portable*.exe)"
+          find . -type f -name 'rustdesk-portable*.exe' -print || true
+          EXE_PATH=$(find . -type f -name 'rustdesk-portable*.exe' -print -quit || true)
           echo "Found EXE_PATH: $EXE_PATH"
           if [ -n "$EXE_PATH" ]; then
-            mv "$EXE_PATH" ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+            BASENAME=$(basename "$EXE_PATH")
+            mv "$EXE_PATH" "./SignOutput/$BASENAME"
+            echo "Moved to ./SignOutput/$BASENAME"
           else
-            echo "ERROR: rustdesk-portable-packer.exe not found"
+            echo "ERROR: rustdesk portable EXE not found"
             echo "Full tree under current dir (first 200 lines):"
             ls -R . | sed -n '1,200p' || true
           fi
@@ -638,7 +666,7 @@ jobs:
       - name: Upload portable executable artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rustdesk-portable-${{ matrix.job.arch }}-sciter
+          name: rustdesk-portable-${{ matrix.job.arch }}
           path: ./SignOutput/*.exe
 
       - name: Sign rustdesk self-extracted file
