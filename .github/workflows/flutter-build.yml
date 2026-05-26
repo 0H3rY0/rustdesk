@@ -334,6 +334,7 @@ jobs:
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
 
       - name: Print final EXE path
+        shell: bash
         run: |
           echo "SignOutput contents:"
           ls -l ./SignOutput || true
@@ -589,6 +590,7 @@ jobs:
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
 
       - name: Print final EXE path
+        shell: bash
         run: |
           echo "SignOutput contents:"
           ls -l ./SignOutput || true
