@@ -266,7 +266,7 @@ jobs:
           python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
 
             # Write a validator script and run it to extract and validate data.bin
-            cat > ./libs/portable/validate_embedded.py <<'PY'
+            cat > validate_embedded.py <<'PY'
             import brotli, sys, os, tempfile, struct
 
             data = open('data.bin','rb').read()
@@ -326,7 +326,7 @@ jobs:
               sys.exit(2)
             print('Embedded settings validation: OK')
             PY
-            python3 ./libs/portable/validate_embedded.py
+            python3 validate_embedded.py
           popd
 
           mkdir -p ./SignOutput
@@ -523,7 +523,7 @@ jobs:
           python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
 
             # Write a validator script and run it to extract and validate data.bin
-            cat > ./libs/portable/validate_embedded.py <<'PY'
+            cat > validate_embedded.py <<'PY'
             import brotli, sys, os, tempfile, struct
 
             data = open('data.bin','rb').read()
@@ -583,7 +583,7 @@ jobs:
               sys.exit(2)
             print('Embedded settings validation: OK')
             PY
-            python3 ./libs/portable/validate_embedded.py
+            python3 validate_embedded.py
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
