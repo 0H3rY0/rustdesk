@@ -350,7 +350,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Build msi
-        if: env.UPLOAD_ARTIFACT == 'true'
+        if: false
         run: |
           pushd ./res/msi
           python preprocess.py --arp -d ../../rustdesk
@@ -372,7 +372,6 @@ jobs:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            ./SignOutput/rustdesk-*.msi
             ./SignOutput/rustdesk-*.exe
 
   # The fallback for the flutter version, we use Sciter for 32bit Windows.
