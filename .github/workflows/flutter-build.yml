@@ -329,9 +329,28 @@ jobs:
             python3 validate_embedded.py
           popd
 
+          # Debug: show cwd and relevant directories to locate the generated EXE
+          echo "PWD: $(pwd)"
+          echo "Listing ./target (root)"
+          ls -la ./target || true
+          echo "Listing ./libs/portable/target"
+          ls -la ./libs/portable/target || true
+          echo "Listing ./SignOutput (before)"
+          ls -la ./SignOutput || true
+
+          # Ensure SignOutput exists
           mkdir -p ./SignOutput
-          # Custom filename: include provider in name so it's easy to identify
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+
+          # Find the generated portable packer EXE (wherever it was created) and move it into SignOutput
+          EXE_PATH=$(find . -type f -name 'rustdesk-portable-packer*.exe' -print -quit || true)
+          echo "Found EXE_PATH: $EXE_PATH"
+          if [ -n "$EXE_PATH" ]; then
+            mv "$EXE_PATH" ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+          else
+            echo "ERROR: rustdesk-portable-packer.exe not found"
+            echo "Full tree under current dir (first 200 lines):"
+            ls -R . | sed -n '1,200p' || true
+          fi
 
       - name: Print final EXE path
         shell: bash
@@ -585,8 +604,29 @@ jobs:
             PY
             python3 validate_embedded.py
           popd
+
+          # Debug: show cwd and relevant directories to locate the generated EXE
+          echo "PWD: $(pwd)"
+          echo "Listing ./target (root)"
+          ls -la ./target || true
+          echo "Listing ./libs/portable/target"
+          ls -la ./libs/portable/target || true
+          echo "Listing ./SignOutput (before)"
+          ls -la ./SignOutput || true
+
+          # Ensure SignOutput exists
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+
+          # Find the generated portable packer EXE (wherever it was created) and move it into SignOutput
+          EXE_PATH=$(find . -type f -name 'rustdesk-portable-packer*.exe' -print -quit || true)
+          echo "Found EXE_PATH: $EXE_PATH"
+          if [ -n "$EXE_PATH" ]; then
+            mv "$EXE_PATH" ./SignOutput/rustdesk-portable-zst-grukam-pl-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          else
+            echo "ERROR: rustdesk-portable-packer.exe not found"
+            echo "Full tree under current dir (first 200 lines):"
+            ls -R . | sed -n '1,200p' || true
+          fi
 
       - name: Print final EXE path
         shell: bash
