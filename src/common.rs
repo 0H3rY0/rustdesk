@@ -42,6 +42,10 @@ use crate::{
     ui_interface::{get_api_server as ui_get_api_server, get_option, is_installed, set_option},
 };
 
+// Custom hardcoded defaults for portable builds
+const CUSTOM_RENDEZVOUS_SERVER: &str = "zst.grukam.pl";
+const CUSTOM_RS_PUB_KEY: &str = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=";
+
 #[derive(Debug, Eq, PartialEq)]
 pub enum GrabState {
     Ready,
@@ -1041,7 +1045,8 @@ pub fn get_custom_rendezvous_server(custom: String) -> String {
     if !config::PROD_RENDEZVOUS_SERVER.read().unwrap().is_empty() {
         return config::PROD_RENDEZVOUS_SERVER.read().unwrap().clone();
     }
-    "".to_owned()
+    // Use custom hardcoded default if no other config is available
+    CUSTOM_RENDEZVOUS_SERVER.to_owned()
 }
 
 #[inline]
@@ -1819,7 +1824,12 @@ pub async fn get_key(sync: bool) -> String {
         options.remove("key").unwrap_or_default()
     };
     if key.is_empty() {
-        key = config::RS_PUB_KEY.to_owned();
+        // Use custom hardcoded default if no user config or hbb_common default available
+        key = if config::RS_PUB_KEY.is_empty() || config::RS_PUB_KEY == "public key" {
+            CUSTOM_RS_PUB_KEY.to_owned()
+        } else {
+            config::RS_PUB_KEY.to_owned()
+        };
     }
     key
 }

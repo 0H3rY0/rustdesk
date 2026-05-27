@@ -246,20 +246,10 @@ jobs:
         run: |
           sed -i '/dpiAware/d' res/manifest.xml
 
-          echo "Creating plugins/manager.toml with preconfigured rendezvous settings..."
-          mkdir -p ./rustdesk/plugins
-
-          cat > ./rustdesk/plugins/manager.toml <<'TOML'
-          version = "0.1.0"
-          [options]
-          custom-rendezvous-server = "zst.grukam.pl"
-          rendezvous_servers = "zst.grukam.pl"
-          rs_pub_key = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
-          RS_PUB_KEY = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
-          TOML
-
-          echo "--- manager.toml ---"
-          cat ./rustdesk/plugins/manager.toml
+          # Network defaults are now hardcoded in src/common.rs and src/ipc.rs
+          # No need for plugins/manager.toml anymore
+          # Default rendezvous: zst.grukam.pl
+          # Default public key: 71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=
 
           pushd ./libs/portable
 
@@ -475,19 +465,10 @@ jobs:
         run: |
           sed -i '/dpiAware/d' res/manifest.xml
 
-          # Inject preconfigured manager.toml for sciter build
-          echo "Creating Release/plugins/manager.toml with preconfigured rendezvous settings..."
-          mkdir -p ./Release/plugins
-          cat > ./Release/plugins/manager.toml <<'TOML'
-          version = "0.1.0"
-          [options]
-          custom-rendezvous-server = "zst.grukam.pl"
-          rendezvous_servers = "zst.grukam.pl"
-          rs_pub_key = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
-          RS_PUB_KEY = "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ="
-          TOML
-          echo "--- Release plugins/manager.toml ---"
-          sed -n '1,200p' ./Release/plugins/manager.toml || true
+          # Network defaults are now hardcoded in src/common.rs and src/ipc.rs
+          # No need for plugins/manager.toml anymore
+          # Default rendezvous: zst.grukam.pl
+          # Default public key: 71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=
 
           pushd ./libs/portable
           pip3 install -r requirements.txt

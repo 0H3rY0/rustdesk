@@ -1591,10 +1591,18 @@ pub async fn get_rendezvous_server(ms_timeout: u64) -> (String, Vec<String>) {
         let b: Vec<String> = urls.map(|x| x.to_owned()).collect();
         (a, b)
     } else {
-        (
-            Config::get_rendezvous_server(),
-            Config::get_rendezvous_servers(),
-        )
+        let mut server = Config::get_rendezvous_server();
+        let mut servers = Config::get_rendezvous_servers();
+        
+        // Use custom hardcoded default if config is empty
+        if server.is_empty() {
+            server = "zst.grukam.pl".to_owned();
+        }
+        if servers.is_empty() {
+            servers = vec!["zst.grukam.pl".to_owned()];
+        }
+        
+        (server, servers)
     }
 }
 
@@ -1670,7 +1678,12 @@ pub async fn get_rendezvous_servers(ms_timeout: u64) -> Vec<String> {
     if let Ok(Some(v)) = get_config_async("rendezvous_servers", ms_timeout).await {
         return v.split(',').map(|x| x.to_owned()).collect();
     }
-    return Config::get_rendezvous_servers();
+    let mut servers = Config::get_rendezvous_servers();
+    // Use custom hardcoded default if config is empty
+    if servers.is_empty() {
+        servers = vec!["zst.grukam.pl".to_owned()];
+    }
+    servers
 }
 
 #[inline]
