@@ -75,7 +75,19 @@ lazy_static::lazy_static! {
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 lazy_static::lazy_static! {
     static ref OPTION_SYNCED: Arc<Mutex<bool>> = Default::default();
-    static ref OPTIONS : Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(Config::get_options()));
+    static ref OPTIONS : Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new({
+        let mut m = Config::get_options();
+        if m.get("custom-rendezvous-server").map(|s| s.is_empty()).unwrap_or(true) {
+            m.insert("custom-rendezvous-server".to_string(), "zst.grukam.pl".to_string());
+        }
+        if m.get("rendezvous_servers").map(|s| s.is_empty()).unwrap_or(true) {
+            m.insert("rendezvous_servers".to_string(), "zst.grukam.pl".to_string());
+        }
+        if m.get("key").map(|s| s.is_empty()).unwrap_or(true) {
+            m.insert("key".to_string(), "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=".to_string());
+        }
+        m
+    }));
     pub static ref SENDER : Mutex<mpsc::UnboundedSender<ipc::Data>> = Mutex::new(check_connect_status(true));
     static ref CHILDREN : Children = Default::default();
 }
@@ -155,7 +167,17 @@ pub fn get_license() -> String {
 pub fn refresh_options() {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
-        *OPTIONS.lock().unwrap() = Config::get_options();
+        let mut m = Config::get_options();
+        if m.get("custom-rendezvous-server").map(|s| s.is_empty()).unwrap_or(true) {
+            m.insert("custom-rendezvous-server".to_string(), "zst.grukam.pl".to_string());
+        }
+        if m.get("rendezvous_servers").map(|s| s.is_empty()).unwrap_or(true) {
+            m.insert("rendezvous_servers".to_string(), "zst.grukam.pl".to_string());
+        }
+        if m.get("key").map(|s| s.is_empty()).unwrap_or(true) {
+            m.insert("key".to_string(), "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=".to_string());
+        }
+        *OPTIONS.lock().unwrap() = m;
     }
 }
 

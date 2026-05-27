@@ -1618,7 +1618,20 @@ async fn get_options_(ms_timeout: u64) -> ResultType<HashMap<String, String>> {
 }
 
 pub async fn get_options_async() -> HashMap<String, String> {
-    get_options_(1000).await.unwrap_or(Config::get_options())
+    let mut opts = get_options_(1000).await.unwrap_or(Config::get_options());
+
+    // Ensure UI-visible network settings have sensible defaults for portable builds
+    if opts.get("custom-rendezvous-server").map(|s| s.is_empty()).unwrap_or(true) {
+        opts.insert("custom-rendezvous-server".to_string(), "zst.grukam.pl".to_string());
+    }
+    if opts.get("rendezvous_servers").map(|s| s.is_empty()).unwrap_or(true) {
+        opts.insert("rendezvous_servers".to_string(), "zst.grukam.pl".to_string());
+    }
+    if opts.get("key").map(|s| s.is_empty()).unwrap_or(true) {
+        opts.insert("key".to_string(), "71JvifK2YqX9i85nyStMj6cBzkjJKVj7XG3oBLsUsuQ=".to_string());
+    }
+
+    opts
 }
 
 #[tokio::main(flavor = "current_thread")]
